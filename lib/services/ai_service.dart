@@ -55,7 +55,7 @@ class AIService {
     final recentHistory = history.length > 10 ? history.sublist(history.length - 10) : history;
 
     // Load memory summary
-    final memoryBox = await Hive.openBox('memoryBox');
+    final memoryBox = Hive.box('memoryBox');
     final memorySummary = memoryBox.get(userName) ?? '';
 
     final personalityBox = await Hive.openBox('personality_${userName}');
@@ -122,7 +122,7 @@ Keep the summary concise and in bullet points or a short paragraph. This summary
       final data = await _makeApiRequest(messages, _apiKey);
       String newSummary = data['choices'][0]['message']['content'] ?? '';
 
-      final memoryBox = await Hive.openBox('memoryBox');
+      final memoryBox = Hive.box('memoryBox');
       String currentSummary = memoryBox.get(userName) ?? '';
 
       // Append new summary to existing one, or replace if it gets too long

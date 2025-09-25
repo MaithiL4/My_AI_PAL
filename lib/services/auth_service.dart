@@ -15,7 +15,7 @@ class AuthService {
     required String usersName,
     required String aiPalName,
   }) async {
-    final userBox = await Hive.openBox<User>(_userBoxName);
+    final userBox = Hive.box<User>(_userBoxName);
 
     // Check if username already exists
     if (userBox.values.any((user) => user.userName == username)) {
@@ -35,7 +35,7 @@ class AuthService {
 
   // Log in a user
   Future<User?> login(String username, String password) async {
-    final userBox = await Hive.openBox<User>(_userBoxName);
+    final userBox = Hive.box<User>(_userBoxName);
     final passwordHash = _hashPassword(password);
 
     try {
@@ -61,7 +61,7 @@ class AuthService {
     final username = prefs.getString(_currentUserKey);
     if (username == null) return null;
 
-    final userBox = await Hive.openBox<User>(_userBoxName);
+    final userBox = Hive.box<User>(_userBoxName);
     try {
       return userBox.values.firstWhere((u) => u.userName == username);
     } catch (e) {

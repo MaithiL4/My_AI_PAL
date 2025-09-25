@@ -1,7 +1,8 @@
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:my_ai_pal/services/auth_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
+import 'package:my_ai_pal/models/user.dart';
 
 class PersonalityScreen extends StatefulWidget {
   const PersonalityScreen({super.key});
@@ -12,31 +13,31 @@ class PersonalityScreen extends StatefulWidget {
 
 class _PersonalityScreenState extends State<PersonalityScreen> {
   final TextEditingController _personalityController = TextEditingController();
-  final AuthService _authService = AuthService();
-  late Box _personalityBox;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
-    _openBoxAndLoadPersonality();
+    _loadPersonality();
   }
 
-  Future<void> _openBoxAndLoadPersonality() async {
-    final user = await _authService.getCurrentUser();
-    if (user != null) {
-      _personalityBox = await Hive.openBox('personality_${user.userName}');
-      final savedPersonality = _personalityBox.get('personality');
-      if (savedPersonality != null) {
-        _personalityController.text = savedPersonality;
-      }
-    }
+  void _loadPersonality() {
+    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+    _personalityController.text = user.aiPalName;
   }
 
   void _savePersonality() {
-    _personalityBox.put('personality', _personalityController.text);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Personality saved!')),
-    );
+    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+    final newPersonality = _personalityController.text.trim();
+    if (newPersonality.isNotEmpty) {
+      _firestore
+          .collection('users')
+          .doc(user.id)
+          .update({'aiPalName': newPersonality});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Personality saved!')),
+      );
+    }
   }
 
   @override
@@ -53,7 +54,7 @@ class _PersonalityScreenState extends State<PersonalityScreen> {
               controller: _personalityController,
               decoration: const InputDecoration(
                 labelText: 'AI Personality',
-                hintText: 'e.g., "A helpful and friendly assistant."',
+                hintText: 'e.g., "A helpful and friendly assistant."'
               ),
               maxLines: 5,
             ),

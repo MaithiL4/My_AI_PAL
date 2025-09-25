@@ -58,7 +58,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         } else {
           emit(AuthFailure(message: 'Sign up failed. Please try again.'));
           emit(AuthUnauthenticated());
-        }n      } catch (e) {
+        }
+      } catch (e) {
         emit(AuthFailure(message: 'An error occurred during sign up.'));
         emit(AuthUnauthenticated());
       }

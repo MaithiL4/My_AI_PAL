@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
 import 'package:my_ai_pal/models/user.dart';
 import 'package:my_ai_pal/screens/login_screen.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
@@ -16,9 +18,9 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late TextEditingController _userNameController;
   late TextEditingController _aiPalNameController;
-  User? _currentUser;
 
   @override
   void initState() {
@@ -28,14 +30,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadCurrentUser();
   }
 
-  Future<void> _loadCurrentUser() async {
-    final user = await _authService.getCurrentUser();
-    if (!mounted) return;
-    setState(() {
-      _currentUser = user;
-      _userNameController.text = _currentUser?.userName ?? '';
-      _aiPalNameController.text = _currentUser?.aiPalName ?? '';
-    });
+  void _loadCurrentUser() {
+    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+    _userNameController.text = user.userName;
+    _aiPalNameController.text = user.aiPalName;
   }
 
   @override
@@ -46,55 +44,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _saveSettings() async {
-    if (_currentUser != null) {
-      final newUserName = _userNameController.text.trim();
-      final newAiPalName = _aiPalNameController.text.trim();
+    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+    final newUserName = _userNameController.text.trim();
+    final newAiPalName = _aiPalNameController.text.trim();
 
-      if (newUserName.isEmpty || newAiPalName.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Names cannot be empty.")),
-        );
-        return;
-      }
-
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text("Restart Required"),
-          content: const Text(
-              "Changing names requires a restart. You will be logged out and need to log back in."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("Continue"),
-            ),
-          ],
-        ),
+    if (newUserName.isEmpty || newAiPalName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Names cannot be empty.")),
       );
+      return;
+    }
 
-      if (confirmed ?? false) {
-        _currentUser!.userName = newUserName;
-        _currentUser!.aiPalName = newAiPalName;
-        await _currentUser!.save();
-        await _authService.logout();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Restart Required"),
+        content: const Text(
+            "Changing names requires a restart. You will be logged out and need to log back in."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Continue"),
+          ),
+        ],
+      ),
+    );
 
-        if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false,
-          );
-        }
+    if (confirmed ?? false) {
+      await _firestore.collection('users').doc(user.id).update({
+        'userName': newUserName,
+        'aiPalName': newAiPalName,
+      });
+      await _authService.logout();
+
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
       }
     }
   }
 
   void _clearHistory() async {
-    if (_currentUser == null) return;
+    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -115,8 +113,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (confirmed ?? false) {
-      final box = await Hive.openBox<Map>('messages_${_currentUser!.userName}');
-      await box.clear();
+      final chatCollection =
+          _firestore.collection('users').doc(user.id).collection('chats');
+      final snapshot = await chatCollection.get();
+      for (final doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Chat history cleared.")),

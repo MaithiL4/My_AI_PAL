@@ -1,90 +1,90 @@
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
-import 'package:hive/hive.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user.dart';
 
 class AuthService {
-  static const String _userBoxName = 'userBox';
-  static const String _currentUserKey = 'currentUser';
+  final firebase_auth.FirebaseAuth _firebaseAuth = firebase_auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Sign up a new user
   Future<User?> signUp({
-    required String username,
+    required String email,
     required String password,
     required String usersName,
     required String aiPalName,
   }) async {
-    final userBox = Hive.box<User>(_userBoxName);
+    try {
+      final credential = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (credential.user != null) {
+        final newUser = User(
+          id: credential.user!.uid,
+          userName: usersName,
+          email: email,
+          aiPalName: aiPalName,
+          hasSeenWelcome: false,
+        );
 
-    // Check if username already exists
-    if (userBox.values.any((user) => user.userName == username)) {
-      return null; // Username already taken
+        await _firestore
+            .collection('users')
+            .doc(credential.user!.uid)
+            .set(newUser.toJson());
+        return newUser;
+      }
+    } catch (e) {
+      // Handle exceptions
+      print(e);
     }
-
-    final passwordHash = _hashPassword(password);
-    final newUser = User()
-      ..userName = username
-      ..passwordHash = passwordHash
-      ..aiPalName = aiPalName
-      ..hasSeenWelcome = false; // Welcome screen not shown yet
-
-    await userBox.add(newUser);
-    return newUser;
+    return null;
   }
 
   // Log in a user
-  Future<User?> login(String username, String password) async {
-    final userBox = Hive.box<User>(_userBoxName);
-    final passwordHash = _hashPassword(password);
-
+  Future<User?> login(String email, String password) async {
     try {
-      final user = userBox.values.firstWhere(
-        (u) => u.userName == username && u.passwordHash == passwordHash,
+      final credential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
-      await _saveCurrentUser(username);
-      return user;
+      if (credential.user != null) {
+        final userDoc =
+            await _firestore.collection('users').doc(credential.user!.uid).get();
+        if (userDoc.exists) {
+          return User.fromJson(userDoc.data()!);
+        }
+      }
     } catch (e) {
-      return null; // User not found or password incorrect
+      // Handle exceptions
+      print(e);
     }
+    return null;
   }
 
   // Log out the current user
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_currentUserKey);
+    await _firebaseAuth.signOut();
   }
 
   // Get the currently logged-in user
-  Future<User?> getCurrentUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final username = prefs.getString(_currentUserKey);
-    if (username == null) return null;
-
-    final userBox = Hive.box<User>(_userBoxName);
-    try {
-      return userBox.values.firstWhere((u) => u.userName == username);
-    } catch (e) {
-      return null; // Should not happen if key is set correctly
-    }
+  Stream<User?> get currentUser {
+    return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
+      if (firebaseUser != null) {
+        final userDoc =
+            await _firestore.collection('users').doc(firebaseUser.uid).get();
+        if (userDoc.exists) {
+          return User.fromJson(userDoc.data()!);
+        }
+      }
+      return null;
+    });
   }
 
   // Mark welcome screen as shown for the user
   Future<void> markWelcomeAsSeen(User user) async {
-    user.hasSeenWelcome = true;
-    await user.save();
-  }
-
-  // Save current user to session
-  Future<void> _saveCurrentUser(String username) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_currentUserKey, username);
-  }
-
-  // Hash a password using SHA-256
-  String _hashPassword(String password) {
-    final bytes = utf8.encode(password);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
+    await _firestore
+        .collection('users')
+        .doc(user.id)
+        .update({'hasSeenWelcome': true});
   }
 }

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:my_ai_pal/services/theme_service.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:my_ai_pal/models/user.dart';
 import 'package:my_ai_pal/screens/chat_screen.dart';
 import 'package:my_ai_pal/screens/login_screen.dart';
@@ -16,24 +13,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:my_ai_pal/theme/theme.dart';
-
-Future<void> initializeApp() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-  if (!kIsWeb) {
-    final dir = await getApplicationDocumentsDirectory();
-    Hive.init(dir.path);
-  } else {
-    Hive.initFlutter();
-  }
-
-  Hive.registerAdapter(UserAdapter());
-  await Hive.openBox<User>('userBox');
-  await Hive.openBox('memoryBox');
-}
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
-  await initializeApp();
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(
     MultiProvider(
       providers: [
@@ -77,9 +65,9 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, state) {
         if (state is AuthAuthenticated) {
           if (!state.user.hasSeenWelcome) {
-            return WelcomeScreen(userName: state.user.userName, aiPalName: state.user.aiPalName);
+            return WelcomeScreen(user: state.user);
           } else {
-            return ChatScreen(userName: state.user.userName, aiPalName: state.user.aiPalName);
+            return const ChatScreen();
           }
         } else if (state is AuthUnauthenticated) {
           return const LoginScreen();

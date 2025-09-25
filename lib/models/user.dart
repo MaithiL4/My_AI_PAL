@@ -1,18 +1,35 @@
-import 'package:hive/hive.dart';
+class User {
+  String id;
+  String userName;
+  String email;
+  String aiPalName;
+  bool hasSeenWelcome;
 
-part 'user.g.dart';
+  User({
+    required this.id,
+    required this.userName,
+    required this.email,
+    required this.aiPalName,
+    this.hasSeenWelcome = false,
+  });
 
-@HiveType(typeId: 0)
-class User extends HiveObject {
-  @HiveField(0)
-  late String userName;
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'],
+      userName: json['userName'],
+      email: json['email'],
+      aiPalName: json['aiPalName'],
+      hasSeenWelcome: json['hasSeenWelcome'] ?? false,
+    );
+  }
 
-  @HiveField(1)
-  late String passwordHash;
-
-  @HiveField(2)
-  late String aiPalName;
-
-  @HiveField(3)
-  late bool hasSeenWelcome;
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userName': userName,
+      'email': email,
+      'aiPalName': aiPalName,
+      'hasSeenWelcome': hasSeenWelcome,
+    };
+  }
 }

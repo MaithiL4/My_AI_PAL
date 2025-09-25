@@ -1,29 +1,46 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:async';
+
+import 'package:bloc/bloc.dart';
+import 'package:meta/meta.dart';
 import 'package:my_ai_pal/models/user.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
-
-import 'package:my_ai_pal/services/error_service.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthService _authService;
+  StreamSubscription<User?>? _userSubscription;
 
   AuthBloc(this._authService) : super(AuthInitial()) {
+    on<AuthCheckRequested>((event, emit) {
+      _userSubscription?.cancel();
+      _userSubscription = _authService.currentUser.listen((user) {
+        add(_AuthUserChanged(user));
+      });
+    });
+
+    on<_AuthUserChanged>((event, emit) {
+      if (event.user != null) {
+        emit(AuthAuthenticated(user: event.user!));
+      } else {
+        emit(AuthUnauthenticated());
+      }
+    });
+
     on<AuthLoginRequested>((event, emit) async {
       emit(AuthLoading());
       try {
-        final user = await _authService.login(event.username, event.password);
+        final user = await _authService.login(event.email, event.password);
         if (user != null) {
           emit(AuthAuthenticated(user: user));
         } else {
-          emit(AuthFailure(message: 'Invalid username or password.'));
+          emit(AuthFailure(message: 'Login failed. Please check your credentials.'));
+          emit(AuthUnauthenticated());
         }
-      } catch (e, s) {
-        ErrorService.handleError(e, s);
-        emit(AuthFailure(message: e.toString()));
+      } catch (e) {
+        emit(AuthFailure(message: 'An error occurred during login.'));
+        emit(AuthUnauthenticated());
       }
     });
 
@@ -31,24 +48,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthLoading());
       try {
         final user = await _authService.signUp(
-          username: event.username,
+          email: event.email,
           password: event.password,
           usersName: event.usersName,
           aiPalName: event.aiPalName,
         );
         if (user != null) {
-          final loggedInUser = await _authService.login(event.username, event.password);
-          if (loggedInUser != null) {
-            emit(AuthAuthenticated(user: loggedInUser));
-          } else {
-            emit(AuthFailure(message: 'Login after sign up failed.'));
-          }
+          emit(AuthAuthenticated(user: user));
         } else {
-          emit(AuthFailure(message: 'Username is already taken.'));
-        }
-      } catch (e, s) {
-        ErrorService.handleError(e, s);
-        emit(AuthFailure(message: e.toString()));
+          emit(AuthFailure(message: 'Sign up failed. Please try again.'));
+          emit(AuthUnauthenticated());
+        }n      } catch (e) {
+        emit(AuthFailure(message: 'An error occurred during sign up.'));
+        emit(AuthUnauthenticated());
       }
     });
 
@@ -56,19 +68,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authService.logout();
       emit(AuthUnauthenticated());
     });
+  }
 
-    on<AuthCheckRequested>((event, emit) async {
-      try {
-        final user = await _authService.getCurrentUser();
-        if (user != null) {
-          emit(AuthAuthenticated(user: user));
-        } else {
-          emit(AuthUnauthenticated());
-        }
-      } catch (e, s) {
-        ErrorService.handleError(e, s);
-        emit(AuthUnauthenticated());
-      }
-    });
+  @override
+  Future<void> close() {
+    _userSubscription?.cancel();
+    return super.close();
   }
 }

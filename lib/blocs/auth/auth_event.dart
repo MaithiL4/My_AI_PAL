@@ -4,20 +4,20 @@ part of 'auth_bloc.dart';
 abstract class AuthEvent {}
 
 class AuthLoginRequested extends AuthEvent {
-  final String username;
+  final String email;
   final String password;
 
-  AuthLoginRequested({required this.username, required this.password});
+  AuthLoginRequested({required this.email, required this.password});
 }
 
 class AuthSignUpRequested extends AuthEvent {
-  final String username;
+  final String email;
   final String password;
   final String usersName;
   final String aiPalName;
 
   AuthSignUpRequested({
-    required this.username,
+    required this.email,
     required this.password,
     required this.usersName,
     required this.aiPalName,
@@ -28,3 +28,8 @@ class AuthLogoutRequested extends AuthEvent {}
 
 class AuthCheckRequested extends AuthEvent {}
 
+class _AuthUserChanged extends AuthEvent {
+  final User? user;
+
+  _AuthUserChanged(this.user);
+}

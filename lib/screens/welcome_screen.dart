@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:my_ai_pal/models/user.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
 import 'package:my_ai_pal/theme/colors.dart';
 import 'chat_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  final String userName;
-  final String aiPalName;
+  final User user;
 
   const WelcomeScreen({
     super.key,
-    required this.userName,
-    required this.aiPalName,
+    required this.user,
   });
 
   @override
@@ -46,10 +45,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   Future<void> _markWelcomeShown() async {
-    final user = await _authService.getCurrentUser();
-    if (user != null) {
-      await _authService.markWelcomeAsSeen(user);
-    }
+    await _authService.markWelcomeAsSeen(widget.user);
   }
 
   @override
@@ -88,7 +84,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 ),
                 const SizedBox(height: 30),
                 Text(
-                  "Hi ${widget.userName}, I'm ${widget.aiPalName}!",
+                  "Hi ${widget.user.userName}, I'm ${widget.user.aiPalName}!",
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -98,7 +94,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "I'm your best friend. We’ll share everything that comes to our minds.\n\n" // Corrected: \n\n is the correct escape for a newline in a Dart string literal.
+                  "I'm your best friend. We’ll share everything that comes to our minds.\n\n"
                   "You can chat with me every day, about anything. I’m always here for you!",
                   style: TextStyle(
                     fontSize: 18,
@@ -112,10 +108,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ChatScreen(
-                          userName: widget.userName,
-                          aiPalName: widget.aiPalName,
-                        ),
+                        builder: (_) => const ChatScreen(),
                       ),
                     );
                   },

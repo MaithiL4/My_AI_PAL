@@ -33,13 +33,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthLoading());
       try {
         final user = await _authService.login(event.email, event.password);
-        if (user != null) {
-          emit(AuthAuthenticated(user: user));
-        } else {
-          // This case should ideally not be reached if exceptions are caught correctly
-          emit(AuthFailure(message: 'Login failed. Please check your credentials.'));
-          emit(AuthUnauthenticated());
-        }
+        emit(AuthAuthenticated(user: user));
       } on firebase_auth.FirebaseAuthException catch (e) {
         if (e.code == 'user-not-found') {
           emit(AuthFailure(message: 'No user found for that email.'));
@@ -48,6 +42,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         } else {
           emit(AuthFailure(message: 'An error occurred during login.'));
         }
+        emit(AuthUnauthenticated());
+      } catch (e) {
+        emit(AuthFailure(message: e.toString()));
         emit(AuthUnauthenticated());
       }
     });
@@ -61,18 +58,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           usersName: event.usersName,
           aiPalName: event.aiPalName,
         );
-        if (user != null) {
-          emit(AuthAuthenticated(user: user));
-        } else {
-          emit(AuthFailure(message: 'Sign up failed. Please try again.'));
-          emit(AuthUnauthenticated());
-        }
+        emit(AuthAuthenticated(user: user));
       } on firebase_auth.FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use') {
           emit(AuthFailure(message: 'The email address is already in use by another account.'));
         } else {
           emit(AuthFailure(message: 'An error occurred during sign up.'));
         }
+        emit(AuthUnauthenticated());
+      } catch (e) {
+        emit(AuthFailure(message: e.toString()));
         emit(AuthUnauthenticated());
       }
     });

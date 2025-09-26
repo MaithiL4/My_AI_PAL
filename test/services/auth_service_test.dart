@@ -1,4 +1,3 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -72,7 +71,90 @@ void main() {
 
         // Assert
         expect(result, isA<app_user.User>());
-        expect(result!.id, uid);
+        expect(result.id, uid);
+      });
+
+      test('should throw an exception when login fails', () async {
+        // Arrange
+        const email = 'test@example.com';
+        const password = 'password';
+        final exception = firebase_auth.FirebaseAuthException(code: 'user-not-found');
+
+        when(mockFirebaseAuth.signInWithEmailAndPassword(email: email, password: password))
+            .thenThrow(exception);
+
+        // Act & Assert
+        expect(
+          () => authService.login(email, password),
+          throwsA(isA<firebase_auth.FirebaseAuthException>()),
+        );
+      });
+    });
+
+    group('signUp', () {
+      test('should return a User when signUp is successful', () async {
+        // Arrange
+        const email = 'test@example.com';
+        const password = 'password';
+        const usersName = 'Test User';
+        const aiPalName = 'Test Pal';
+        const uid = '123';
+
+        when(mockFirebaseAuth.createUserWithEmailAndPassword(email: email, password: password))
+            .thenAnswer((_) async => mockUserCredential);
+        when(mockUserCredential.user).thenReturn(mockUser);
+        when(mockUser.uid).thenReturn(uid);
+        when(mockFirestore.collection('users')).thenReturn(mockCollectionReference);
+        when(mockCollectionReference.doc(uid)).thenReturn(mockDocumentReference);
+
+        // Act
+        final result = await authService.signUp(
+          email: email,
+          password: password,
+          usersName: usersName,
+          aiPalName: aiPalName,
+        );
+
+        // Assert
+        expect(result, isA<app_user.User>());
+        expect(result.id, uid);
+        verify(mockDocumentReference.set(any)).called(1);
+      });
+
+      test('should throw an exception when signUp fails', () async {
+        // Arrange
+        const email = 'test@example.com';
+        const password = 'password';
+        const usersName = 'Test User';
+        const aiPalName = 'Test Pal';
+        final exception = firebase_auth.FirebaseAuthException(code: 'email-already-in-use');
+
+        when(mockFirebaseAuth.createUserWithEmailAndPassword(email: email, password: password))
+            .thenThrow(exception);
+
+        // Act & Assert
+        expect(
+          () => authService.signUp(
+            email: email,
+            password: password,
+            usersName: usersName,
+            aiPalName: aiPalName,
+          ),
+          throwsA(isA<firebase_auth.FirebaseAuthException>()),
+        );
+      });
+    });
+
+    group('logout', () {
+      test('should call signOut on FirebaseAuth', () async {
+        // Arrange
+        when(mockFirebaseAuth.signOut()).thenAnswer((_) async => {});
+
+        // Act
+        await authService.logout();
+
+        // Assert
+        verify(mockFirebaseAuth.signOut()).called(1);
       });
     });
   });

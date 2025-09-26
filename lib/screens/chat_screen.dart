@@ -21,6 +21,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
   bool _isTyping = false;
+  bool _initialGreetingSent = false;
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -123,7 +124,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
                 final messages = snapshot.data!.docs;
 
-                if (messages.isEmpty) {
+                if (messages.isEmpty && !_initialGreetingSent) {
+                  _initialGreetingSent = true;
                   _getInitialGreeting(user);
                   return const Center(child: CircularProgressIndicator());
                 }

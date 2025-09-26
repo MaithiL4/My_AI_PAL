@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
 import 'package:my_ai_pal/models/user.dart';
 import 'package:my_ai_pal/screens/settings_screen.dart';
@@ -21,7 +24,28 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
   bool _isTyping = false;
-  bool _initialGreetingSent = false;
+
+  List<QueryDocumentSnapshot> _messages = [];
+  bool _isLoadingMore = false;
+  DocumentSnapshot? _lastDocument;
+  StreamSubscription? _messagesSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_loadMoreMessages);
+    _fetchMessages(isInitialFetch: true);
+    _subscribeToNewMessages();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scroll.removeListener(_loadMoreMessages);
+    _scroll.dispose();
+    _messagesSubscription?.cancel();
+    super.dispose();
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -31,6 +55,69 @@ class _ChatScreenState extends State<ChatScreen> {
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
         );
+      }
+    });
+  }
+
+  void _loadMoreMessages() {
+    if (_scroll.position.pixels == _scroll.position.minScrollExtent && !_isLoadingMore) {
+      _fetchMessages();
+    }
+  }
+
+  Future<void> _fetchMessages({bool isInitialFetch = false}) async {
+    if (_isLoadingMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+    Query query = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.id)
+        .collection('chats')
+        .orderBy('timestamp', descending: true)
+        .limit(20);
+
+    if (!isInitialFetch && _lastDocument != null) {
+      query = query.startAfterDocument(_lastDocument!);
+    }
+
+    final snapshot = await query.get();
+
+    if (isInitialFetch && snapshot.docs.isEmpty) {
+      _getInitialGreeting(user);
+    }
+
+    if (snapshot.docs.isNotEmpty) {
+      _lastDocument = snapshot.docs.last;
+      setState(() {
+        _messages.addAll(snapshot.docs);
+      });
+    }
+
+    setState(() {
+      _isLoadingMore = false;
+    });
+  }
+
+  void _subscribeToNewMessages() {
+    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+    _messagesSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.id)
+        .collection('chats')
+        .orderBy('timestamp', descending: true)
+        .limit(1)        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        final newMessage = snapshot.docs.first;
+        if (!_messages.any((msg) => msg.id == newMessage.id)) {
+          setState(() {
+            _messages.insert(0, newMessage);
+          });
+        }
       }
     });
   }
@@ -45,16 +132,8 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     try {
-      final chatCollection = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.id)
-          .collection('chats')
-          .orderBy('timestamp', descending: true)
-          .limit(10);
-
-      final snapshot = await chatCollection.get();
-      final history = snapshot.docs.map((doc) {
-        final data = doc.data();
+      final history = _messages.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
         return {
           'sender': data['sender'] as String,
           'text': data['text'] as String,
@@ -62,7 +141,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }).toList();
 
 
-      await AIService.getAIReply(
+      await context.read<AIService>().getAIReply(
         userMessage: text,
         user: user,
         history: history.reversed.toList(),
@@ -75,13 +154,6 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       _scrollToBottom();
     }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _scroll.dispose();
-    super.dispose();
   }
 
   @override
@@ -105,53 +177,29 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
+          if (_isLoadingMore) const LinearProgressIndicator(),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(user.id)
-                  .collection('chats')
-                  .orderBy('timestamp', descending: false)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return const Center(child: Text('Something went wrong'));
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final messages = snapshot.data!.docs;
-
-                if (messages.isEmpty && !_initialGreetingSent) {
-                  _initialGreetingSent = true;
-                  _getInitialGreeting(user);
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _scrollToBottom();
-                });
-
-                return ListView.builder(
-                  controller: _scroll,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[index].data() as Map<String, dynamic>;
-                    final isUser = msg['sender'] == user.userName;
-                    return ChatBubble(
-                      message: msg['text'] ?? '',
-                      isUser: isUser,
-                      userName: user.userName,
-                      aiPalName: user.aiPalName,
-                      timestamp: (msg['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-                    );
-                  },
-                );
-              },
-            ),
+            child: _messages.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    controller: _scroll,
+                    reverse: true,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = _messages[index].data() as Map<String, dynamic>;
+                      final isUser = msg['sender'] == user.userName;
+                      return ChatBubble(
+                        message: msg['text'] ?? '',
+                        isUser: isUser,
+                        userName: user.userName,
+                        aiPalName: user.aiPalName,
+                        timestamp: (msg['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+                        userAvatarUrl: user.avatarUrl,
+                        aiAvatarUrl: user.aiAvatarUrl,
+                      );
+                    },
+                  ),
           ),
           if (_isTyping)
             const Padding(
@@ -204,7 +252,7 @@ class _ChatScreenState extends State<ChatScreen> {
     await Future.delayed(const Duration(milliseconds: 100));
     setState(() => _isTyping = true);
     try {
-      await AIService.getAIReply(
+      await context.read<AIService>().getAIReply(
         userMessage: "Introduce yourself to your new friend, ${user.userName}. Be warm and ask a question to start the conversation.",
         user: user,
         history: [], // No history for the first message

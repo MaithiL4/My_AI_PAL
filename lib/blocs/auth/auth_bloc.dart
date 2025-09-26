@@ -76,6 +76,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authService.logout();
       emit(AuthUnauthenticated());
     });
+
+    on<UserUpdated>((event, emit) {
+      if (state is AuthAuthenticated) {
+        emit(AuthAuthenticated(user: event.user));
+      }
+    });
   }
 
   @override

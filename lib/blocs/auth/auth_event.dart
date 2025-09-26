@@ -26,6 +26,12 @@ class AuthSignUpRequested extends AuthEvent {
 
 class AuthLogoutRequested extends AuthEvent {}
 
+class UserUpdated extends AuthEvent {
+  final User user;
+
+  UserUpdated(this.user);
+}
+
 class AuthCheckRequested extends AuthEvent {}
 
 class _AuthUserChanged extends AuthEvent {

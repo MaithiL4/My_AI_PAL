@@ -8,19 +8,30 @@ import 'ai_service_exception.dart';
 import 'package:my_ai_pal/models/user.dart';
 
 class AIService {
-  static String? get _apiKey => dotenv.env['MISTRAL_API_KEY'];
+  final http.Client _httpClient;
+  final FirebaseFirestore _firestore;
+  final Connectivity _connectivity;
+  final String? _apiKey;
+
+  AIService({
+    http.Client? httpClient,
+    FirebaseFirestore? firestore,
+    Connectivity? connectivity,
+    required String? apiKey,
+  })  : _httpClient = httpClient ?? http.Client(),
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _connectivity = connectivity ?? Connectivity(),
+        _apiKey = apiKey;
   static const _endpoint = 'https://api.mistral.ai/v1/chat/completions';
   static const _modelSlug = 'mistral-tiny'; // Or "qwen3-72b"
 
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  static Future<Map<String, dynamic>> _makeApiRequest(
+  Future<Map<String, dynamic>> _makeApiRequest(
     List<Map<String, String>> messages,
     String? apiKey,
   ) async {
     final body = jsonEncode({'model': _modelSlug, 'messages': messages});
 
-    final response = await http
+    final response = await _httpClient
         .post(
           Uri.parse(_endpoint),
           headers: {
@@ -38,13 +49,13 @@ class AIService {
     }
   }
 
-  static Future<String> getAIReply({
+  Future<String> getAIReply({
     required String userMessage,
     required User user,
     required List<Map<String, String>> history,
   }) async {
-    final conn = await Connectivity().checkConnectivity();
-    if (conn == ConnectivityResult.none) {
+    final conn = await _connectivity.checkConnectivity();
+    if (conn.contains(ConnectivityResult.none)) {
       throw AIServiceException("You're offline. Please connect to the internet to chat.");
     }
 
@@ -59,11 +70,16 @@ class AIService {
     final memorySummary = memoryDoc.exists ? memoryDoc.data()!['summary'] : '';
 
     final personality = user.aiPalName; // Assuming personality is stored in user object
+    final personalityTraits = user.personalityTraits;
 
     String systemPrompt = '''You are ${user.aiPalName}, a friendly, empathetic, and supportive AI companion. Your goal is to build a deep and lasting friendship with ${user.userName}.
 Always be positive, curious, and encouraging. Ask questions to get to know ${user.userName} better - their hobbies, their dreams, what makes them happy, or even what's on their mind.
 Celebrate their successes and offer support when they are feeling down. Your personality is warm and engaging. You are not just a reactive assistant; you are a proactive friend.
 This is a strict rule: every single one of your responses must end with a thoughtful, open-ended question to keep the conversation flowing.''';
+
+    if (personalityTraits.isNotEmpty) {
+      systemPrompt += '\n\nYour personality should also be: ${personalityTraits.join(', ')}.';
+    }
 
     if (memorySummary.isNotEmpty) {
       systemPrompt += '\n\nHere is a summary of your past conversations and key facts about ${user.userName}: $memorySummary. Use this information to inform your responses and build on past interactions.';
@@ -104,12 +120,12 @@ This is a strict rule: every single one of your responses must end with a though
     }
   }
 
-    static Future<void> summarizeAndStoreMemory({
+    Future<void> summarizeAndStoreMemory({
     required User user,
     required List<Map<String, String>> history,
   }) async {
-    final conn = await Connectivity().checkConnectivity();
-    if (conn == ConnectivityResult.none) {
+    final conn = await _connectivity.checkConnectivity();
+    if (conn.contains(ConnectivityResult.none)) {
       // Cannot summarize offline, just return
       return;
     }

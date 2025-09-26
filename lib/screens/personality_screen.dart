@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
-import 'package:my_ai_pal/models/user.dart';
 
 class PersonalityScreen extends StatefulWidget {
   const PersonalityScreen({super.key});
@@ -12,31 +11,29 @@ class PersonalityScreen extends StatefulWidget {
 }
 
 class _PersonalityScreenState extends State<PersonalityScreen> {
-  final TextEditingController _personalityController = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final List<String> _predefinedTraits = [
+    'Friendly',
+    'Witty',
+    'Curious',
+    'Empathetic',
+    'Supportive',
+    'Playful',
+    'Sarcastic',
+    'Formal',
+    'Informal',
+  ];
+
+  final Set<String> _selectedTraits = {};
+  final TextEditingController _customTraitController = TextEditingController();
+  bool _traitsInitialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    _loadPersonality();
-  }
-
-  void _loadPersonality() {
-    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
-    _personalityController.text = user.aiPalName;
-  }
-
-  void _savePersonality() {
-    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
-    final newPersonality = _personalityController.text.trim();
-    if (newPersonality.isNotEmpty) {
-      _firestore
-          .collection('users')
-          .doc(user.id)
-          .update({'aiPalName': newPersonality});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Personality saved!')),
-      );
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_traitsInitialized) {
+      final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+      _selectedTraits.addAll(user.personalityTraits);
+      _traitsInitialized = true;
     }
   }
 
@@ -44,27 +41,77 @@ class _PersonalityScreenState extends State<PersonalityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Personality'),
+        title: const Text('Customize Personality'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _personalityController,
-              decoration: const InputDecoration(
-                labelText: 'AI Personality',
-                hintText: 'e.g., "A helpful and friendly assistant."'
-              ),
-              maxLines: 5,
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              children: [
+                ..._predefinedTraits.map((trait) => CheckboxListTile(
+                      title: Text(trait),
+                      value: _selectedTraits.contains(trait),
+                      onChanged: (bool? value) {
+                        setState(() {
+                          if (value == true) {
+                            _selectedTraits.add(trait);
+                          } else {
+                            _selectedTraits.remove(trait);
+                          }
+                        });
+                      },
+                    )),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextField(
+                    controller: _customTraitController,
+                    decoration: const InputDecoration(
+                      labelText: 'Add a custom trait',
+                      suffixIcon: Icon(Icons.add),
+                    ),
+                    onSubmitted: (value) {
+                      if (value.isNotEmpty) {
+                        setState(() {
+                          _selectedTraits.add(value);
+                          _customTraitController.clear();
+                        });
+                      }
+                    },
+                  ),
+                ),
+                Wrap(
+                  spacing: 8.0,
+                  children: _selectedTraits
+                      .map((trait) => Chip(
+                            label: Text(trait),
+                            onDeleted: () {
+                              setState(() {
+                                _selectedTraits.remove(trait);
+                              });
+                            },
+                          ))
+                      .toList(),
+                ),
+              ],
             ),
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _savePersonality,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () {
+                final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+                final updatedUser = user.copyWith(personalityTraits: _selectedTraits.toList());
+                context.read<AuthBloc>().add(UserUpdated(updatedUser));
+                FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.id)
+                    .update({'personalityTraits': _selectedTraits.toList()});
+                Navigator.pop(context);
+              },
               child: const Text('Save'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

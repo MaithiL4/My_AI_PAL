@@ -8,6 +8,7 @@ import 'package:my_ai_pal/screens/login_screen.dart';
 import 'package:my_ai_pal/screens/personality_screen.dart';
 import 'package:my_ai_pal/screens/settings_screen.dart';
 import 'package:my_ai_pal/screens/welcome_screen.dart';
+import 'package:my_ai_pal/services/ai_service.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
@@ -23,10 +24,12 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   final authService = AuthService();
+  final aiService = AIService(apiKey: dotenv.env['MISTRAL_API_KEY']);
   runApp(
     MultiProvider(
       providers: [
         Provider<AuthService>.value(value: authService),
+        Provider<AIService>.value(value: aiService),
         ChangeNotifierProvider(create: (_) => ThemeService()),
         BlocProvider(create: (_) => AuthBloc(authService)..add(AuthCheckRequested())),
       ],

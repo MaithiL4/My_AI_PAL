@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
 import 'package:my_ai_pal/models/user.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:my_ai_pal/screens/avatar_selection_screen.dart';
 import 'package:my_ai_pal/screens/login_screen.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
 import 'package:my_ai_pal/services/theme_service.dart';
@@ -146,6 +148,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  final selectedAvatar = await Navigator.push<String>(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AvatarSelectionScreen()),
+                  );
+
+                  if (selectedAvatar != null) {
+                    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+                    final updatedUser = user.copyWith(avatarUrl: selectedAvatar);
+                    context.read<AuthBloc>().add(UserUpdated(updatedUser));
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.id)
+                        .update({'avatarUrl': selectedAvatar});
+                  }
+                },
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      child: ClipOval(
+                        child: SvgPicture.network(
+                          (context.watch<AuthBloc>().state as AuthAuthenticated).user.avatarUrl ??
+                              'https://api.dicebear.com/7.x/adventurer/svg?seed=0',
+                          placeholderBuilder: (context) => const CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Your Avatar'),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () async {
+                  final selectedAvatar = await Navigator.push<String>(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AvatarSelectionScreen()),
+                  );
+
+                  if (selectedAvatar != null) {
+                    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
+                    final updatedUser = user.copyWith(aiAvatarUrl: selectedAvatar);
+                    context.read<AuthBloc>().add(UserUpdated(updatedUser));
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.id)
+                        .update({'aiAvatarUrl': selectedAvatar});
+                  }
+                },
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      child: ClipOval(
+                        child: SvgPicture.network(
+                          (context.watch<AuthBloc>().state as AuthAuthenticated).user.aiAvatarUrl ??
+                              'https://api.dicebear.com/7.x/adventurer/svg?seed=13',
+                          placeholderBuilder: (context) => const CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('AI Pal\'s Avatar'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
           Card(
             elevation: 2,
             child: Padding(

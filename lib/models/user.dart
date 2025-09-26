@@ -4,6 +4,9 @@ class User {
   String email;
   String aiPalName;
   bool hasSeenWelcome;
+  List<String> personalityTraits;
+  String? avatarUrl;
+  String? aiAvatarUrl;
 
   User({
     required this.id,
@@ -11,6 +14,9 @@ class User {
     required this.email,
     required this.aiPalName,
     this.hasSeenWelcome = false,
+    this.personalityTraits = const [],
+    this.avatarUrl,
+    this.aiAvatarUrl,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -20,6 +26,9 @@ class User {
       email: json['email'],
       aiPalName: json['aiPalName'],
       hasSeenWelcome: json['hasSeenWelcome'] ?? false,
+      personalityTraits: List<String>.from(json['personalityTraits'] ?? []),
+      avatarUrl: json['avatarUrl'],
+      aiAvatarUrl: json['aiAvatarUrl'],
     );
   }
 
@@ -30,6 +39,31 @@ class User {
       'email': email,
       'aiPalName': aiPalName,
       'hasSeenWelcome': hasSeenWelcome,
+      'personalityTraits': personalityTraits,
+      'avatarUrl': avatarUrl,
+      'aiAvatarUrl': aiAvatarUrl,
     };
+  }
+
+  User copyWith({
+    String? id,
+    String? userName,
+    String? email,
+    String? aiPalName,
+    bool? hasSeenWelcome,
+    List<String>? personalityTraits,
+    String? avatarUrl,
+    String? aiAvatarUrl,
+  }) {
+    return User(
+      id: id ?? this.id,
+      userName: userName ?? this.userName,
+      email: email ?? this.email,
+      aiPalName: aiPalName ?? this.aiPalName,
+      hasSeenWelcome: hasSeenWelcome ?? this.hasSeenWelcome,
+      personalityTraits: personalityTraits ?? this.personalityTraits,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      aiAvatarUrl: aiAvatarUrl ?? this.aiAvatarUrl,
+    );
   }
 }

@@ -17,8 +17,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final AuthService _authService = AuthService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late TextEditingController _userNameController;
   late TextEditingController _aiPalNameController;
 
@@ -75,11 +73,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (confirmed ?? false) {
-      await _firestore.collection('users').doc(user.id).update({
+      await FirebaseFirestore.instance.collection('users').doc(user.id).update({
         'userName': newUserName,
         'aiPalName': newAiPalName,
       });
-      await _authService.logout();
+      await context.read<AuthService>().logout();
 
       if (mounted) {
         Navigator.pushAndRemoveUntil(
@@ -114,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirmed ?? false) {
       final chatCollection =
-          _firestore.collection('users').doc(user.id).collection('chats');
+          FirebaseFirestore.instance.collection('users').doc(user.id).collection('chats');
       final snapshot = await chatCollection.get();
       for (final doc in snapshot.docs) {
         await doc.reference.delete();
@@ -128,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _logout() async {
-    await _authService.logout();
+    await context.read<AuthService>().logout();
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,

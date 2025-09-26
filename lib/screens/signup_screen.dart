@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_ai_pal/screens/chat_screen.dart';
+import 'package:my_ai_pal/screens/welcome_screen.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
 import 'package:my_ai_pal/theme/colors.dart';
 
@@ -57,6 +59,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
+          if (state is AuthAuthenticated) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => state.user.hasSeenWelcome
+                    ? const ChatScreen()
+                    : WelcomeScreen(user: state.user),
+              ),
+              (route) => false,
+            );
+          }
           if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),

@@ -22,11 +22,13 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  final authService = AuthService();
   runApp(
     MultiProvider(
       providers: [
+        Provider<AuthService>.value(value: authService),
         ChangeNotifierProvider(create: (_) => ThemeService()),
-        BlocProvider(create: (_) => AuthBloc(AuthService())..add(AuthCheckRequested())),
+        BlocProvider(create: (_) => AuthBloc(authService)..add(AuthCheckRequested())),
       ],
       child: const MyAIPal(),
     ),
@@ -45,7 +47,23 @@ class MyAIPal extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeService.themeMode,
-          home: const AuthWrapper(),
+          home: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              if (state is AuthAuthenticated) {
+                if (!state.user.hasSeenWelcome) {
+                  return WelcomeScreen(user: state.user);
+                } else {
+                  return const ChatScreen();
+                }
+              } else if (state is AuthUnauthenticated) {
+                return const LoginScreen();
+              } else {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+            },
+          ),
           routes: {
             '/settings': (context) => const SettingsScreen(),
             '/personality': (context) => const PersonalityScreen(),
@@ -61,22 +79,8 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        if (state is AuthAuthenticated) {
-          if (!state.user.hasSeenWelcome) {
-            return WelcomeScreen(user: state.user);
-          } else {
-            return const ChatScreen();
-          }
-        } else if (state is AuthUnauthenticated) {
-          return const LoginScreen();
-        } else {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-      },
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }

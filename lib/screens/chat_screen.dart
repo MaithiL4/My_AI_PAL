@@ -44,10 +44,27 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     try {
+      final chatCollection = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.id)
+          .collection('chats')
+          .orderBy('timestamp', descending: true)
+          .limit(10);
+
+      final snapshot = await chatCollection.get();
+      final history = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'sender': data['sender'] as String,
+          'text': data['text'] as String,
+        };
+      }).toList();
+
+
       await AIService.getAIReply(
         userMessage: text,
         user: user,
-        history: [], // History is now managed by Firestore
+        history: history.reversed.toList(),
       );
     } on AIServiceException catch (e, s) {
       ErrorService.handleError(e, s);
@@ -105,6 +122,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
 
                 final messages = snapshot.data!.docs;
+
+                if (messages.isEmpty) {
+                  _getInitialGreeting(user);
+                  return const Center(child: CircularProgressIndicator());
+                }
 
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   _scrollToBottom();
@@ -173,5 +195,22 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _getInitialGreeting(User user) async {
+    // Add a small delay to avoid calling setState during build
+    await Future.delayed(const Duration(milliseconds: 100));
+    setState(() => _isTyping = true);
+    try {
+      await AIService.getAIReply(
+        userMessage: "Introduce yourself to your new friend, ${user.userName}. Be warm and ask a question to start the conversation.",
+        user: user,
+        history: [], // No history for the first message
+      );
+    } on AIServiceException catch (e, s) {
+      ErrorService.handleError(e, s);
+    } finally {
+      setState(() => _isTyping = false);
+    }
   }
 }

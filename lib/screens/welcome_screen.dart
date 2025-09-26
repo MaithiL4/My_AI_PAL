@@ -18,14 +18,12 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen>
     with SingleTickerProviderStateMixin {
-  final AuthService _authService = AuthService();
   late AnimationController _animationController;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _markWelcomeShown();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -39,13 +37,19 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _markWelcomeShown();
+  }
+
+  @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
   }
 
   Future<void> _markWelcomeShown() async {
-    await _authService.markWelcomeAsSeen(widget.user);
+    await context.read<AuthService>().markWelcomeAsSeen(widget.user);
   }
 
   @override

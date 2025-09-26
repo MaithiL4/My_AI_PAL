@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:meta/meta.dart';
 import 'package:my_ai_pal/models/user.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
@@ -35,11 +36,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (user != null) {
           emit(AuthAuthenticated(user: user));
         } else {
+          // This case should ideally not be reached if exceptions are caught correctly
           emit(AuthFailure(message: 'Login failed. Please check your credentials.'));
           emit(AuthUnauthenticated());
         }
-      } catch (e) {
-        emit(AuthFailure(message: 'An error occurred during login.'));
+      } on firebase_auth.FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          emit(AuthFailure(message: 'No user found for that email.'));
+        } else if (e.code == 'wrong-password') {
+          emit(AuthFailure(message: 'Wrong password provided for that user.'));
+        } else {
+          emit(AuthFailure(message: 'An error occurred during login.'));
+        }
         emit(AuthUnauthenticated());
       }
     });
@@ -59,8 +67,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           emit(AuthFailure(message: 'Sign up failed. Please try again.'));
           emit(AuthUnauthenticated());
         }
-      } catch (e) {
-        emit(AuthFailure(message: 'An error occurred during sign up.'));
+      } on firebase_auth.FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          emit(AuthFailure(message: 'The email address is already in use by another account.'));
+        } else {
+          emit(AuthFailure(message: 'An error occurred during sign up.'));
+        }
         emit(AuthUnauthenticated());
       }
     });

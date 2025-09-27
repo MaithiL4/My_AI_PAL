@@ -1,7 +1,8 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:my_ai_pal/theme/colors.dart';
 
 class ChatBubble extends StatelessWidget {
   final String message;
@@ -26,7 +27,6 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Row(
       mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -46,41 +46,43 @@ class ChatBubble extends StatelessWidget {
             ),
           ),
         Flexible(
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isUser
-                  ? theme.colorScheme.primary
-                  : (isDarkMode ? AppColors.surfaceDark : AppColors.surfaceLight),
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(20),
-                topRight: const Radius.circular(20),
-                bottomLeft: isUser ? const Radius.circular(20) : const Radius.circular(0),
-                bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(20),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20.0),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isUser
+                      ? theme.colorScheme.primary.withOpacity(0.4)
+                      : Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20.0),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      DateFormat('hh:mm a').format(timestamp),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  message,
-                  style: TextStyle(
-                    color: isUser ? AppColors.textLight : theme.textTheme.bodyLarge?.color,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  DateFormat('hh:mm a').format(timestamp),
-                  style: TextStyle(
-                    color: isUser
-                        ? AppColors.textLight.withOpacity(0.7)
-                        : theme.textTheme.bodySmall?.color?.withOpacity(0.7),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
             ),
           ),
         ),

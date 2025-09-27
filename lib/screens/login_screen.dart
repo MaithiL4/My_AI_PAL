@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_ai_pal/screens/chat_screen.dart';
-import 'package:my_ai_pal/screens/welcome_screen.dart';
+import 'package:glassmorphism/glassmorphism.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
+import 'package:my_ai_pal/screens/chat_screen.dart';
 import 'package:my_ai_pal/screens/signup_screen.dart';
-import 'package:my_ai_pal/theme/colors.dart';
+import 'package:my_ai_pal/widgets/gradient_scaffold.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in both fields.")),
+        const SnackBar(content: Text("Please fill in all fields.")),
       );
       return;
     }
@@ -40,16 +40,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GradientScaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (context) => state.user.hasSeenWelcome
-                    ? const ChatScreen()
-                    : WelcomeScreen(user: state.user),
-              ),
+              MaterialPageRoute(builder: (context) => const ChatScreen()),
               (route) => false,
             );
           }
@@ -59,85 +55,131 @@ class _LoginScreenState extends State<LoginScreen> {
             );
           }
         },
-        child: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            return Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(context).colorScheme.secondary,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: GlassmorphicContainer(
+              width: 350,
+              height: 550, // Increased height to accommodate signup button
+              borderRadius: 20,
+              blur: 20,
+              alignment: Alignment.center,
+              border: 2,
+              linearGradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.2),
+                  Colors.white.withOpacity(0.05),
+                ],
+                stops: const [0.1, 1],
               ),
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.psychology,
-                        size: 80,
-                        color: AppColors.textLight,
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        "Welcome Back!",
-                        style: TextStyle(
-                          fontSize: 28,
+              borderGradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.5),
+                  Colors.white.withOpacity(0.5),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset('web/icons/Icon-192.png', width: 50, height: 50),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Welcome back",
+                      style: TextStyle(
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textLight,
+                          color: Colors.white),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "Please enter your details to sign in.",
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 30),
+                    TextField(
+                      controller: _emailController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: "Email",
+                        hintStyle: const TextStyle(color: Colors.white54),
+                        prefixIcon:
+                            const Icon(Icons.email, color: Colors.white),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.1),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
                         ),
                       ),
-                      const SizedBox(height: 30),
-                      TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: "Email",
-                          prefixIcon: Icon(Icons.email),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: "Password",
-                          prefixIcon: Icon(Icons.lock),
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      SizedBox(
-                        width: double.infinity,
-                        child: state is AuthLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : ElevatedButton(
-                                onPressed: _login,
-                                child: const Text("Login"),
-                              ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                          );
-                        },
-                        child: const Text(
-                          "Don't have an account? Sign Up",
-                          style: TextStyle(color: AppColors.textLight),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: "Password",
+                        hintStyle: const TextStyle(color: Colors.white54),
+                        prefixIcon: const Icon(Icons.lock, color: Colors.white),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.1),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 25),
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, state) {
+                        if (state is AuthLoading) {
+                          return const CircularProgressIndicator();
+                        }
+                        return ElevatedButton(
+                          onPressed: _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 15,
+                              horizontal: 100,
+                            ),
+                          ),
+                          child: const Text(
+                            "Sign In",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("Don't have an account?", style: TextStyle(color: Colors.white70)),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                            );
+                          },
+                          child: const Text("Sign Up", style: TextStyle(color: Colors.blue)),
+                        ),
+                      ],
+                    )
+                  ],
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );

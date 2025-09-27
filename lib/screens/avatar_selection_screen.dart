@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:glassmorphism/glassmorphism.dart';
+import 'package:my_ai_pal/widgets/gradient_scaffold.dart';
 
 class AvatarSelectionScreen extends StatelessWidget {
   const AvatarSelectionScreen({super.key});
@@ -21,32 +23,59 @@ class AvatarSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GradientScaffold(
       appBar: AppBar(
-        title: const Text('Select Avatar'),
+        title: const Text('Select Avatar', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 8.0,
-          mainAxisSpacing: 8.0,
+      body: GlassmorphicContainer(
+        width: double.infinity,
+        height: double.infinity,
+        borderRadius: 0,
+        blur: 20,
+        alignment: Alignment.center,
+        border: 2,
+        linearGradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.2),
+            Colors.white.withOpacity(0.05),
+          ],
+          stops: const [0.1, 1],
         ),
-        itemCount: _avatars.length,
-        itemBuilder: (context, index) {
-          final avatarUrl = _avatars[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.pop(context, avatarUrl);
-            },
-            child: ClipOval(
-              child: SvgPicture.network(
-                avatarUrl,
-                placeholderBuilder: (context) => const CircularProgressIndicator(),
+        borderGradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.5),
+            Colors.white.withOpacity(0.5),
+          ],
+        ),
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8.0,
+            mainAxisSpacing: 8.0,
+          ),
+          itemCount: _avatars.length,
+          itemBuilder: (context, index) {
+            final avatarUrl = _avatars[index];
+            return GestureDetector(
+              onTap: () {
+                Navigator.pop(context, avatarUrl);
+              },
+              child: ClipOval(
+                child: SvgPicture.network(
+                  avatarUrl,
+                  placeholderBuilder: (context) => const CircularProgressIndicator(),
+                ),
               ),
-            ),
-          );
-        },
-        padding: const EdgeInsets.all(8.0),
+            );
+          },
+          padding: const EdgeInsets.all(8.0),
+        ),
       ),
     );
   }

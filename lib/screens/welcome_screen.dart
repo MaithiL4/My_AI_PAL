@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:glassmorphism/glassmorphism.dart';
 import 'package:provider/provider.dart';
 import 'package:my_ai_pal/models/user.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
-import 'package:my_ai_pal/theme/colors.dart';
+import 'package:my_ai_pal/widgets/gradient_scaffold.dart';
 import 'chat_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -55,21 +56,34 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.secondary,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
+    return GradientScaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: GlassmorphicContainer(
+            width: 350,
+            height: 500,
+            borderRadius: 20,
+            blur: 20,
+            alignment: Alignment.center,
+            border: 2,
+            linearGradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.2),
+                Colors.white.withOpacity(0.05),
+              ],
+              stops: const [0.1, 1],
+            ),
+            borderGradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.5),
+                Colors.white.withOpacity(0.5),
+              ],
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -84,7 +98,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   child: const Icon(
                     Icons.favorite,
                     size: 80,
-                    color: AppColors.accent,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -93,7 +107,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textLight,
+                    color: Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -103,7 +117,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   "You can chat with me every day, about anything. I’m always here for you!",
                   style: TextStyle(
                     fontSize: 18,
-                    color: AppColors.textLight,
+                    color: Colors.white70,
                   ),
                   textAlign: TextAlign.center,
                 ),

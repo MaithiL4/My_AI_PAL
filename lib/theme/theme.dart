@@ -54,7 +54,6 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.backgroundDark,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
-        secondary: AppColors.secondary,
         surface: AppColors.surfaceDark,
         background: AppColors.backgroundDark,
         error: Colors.red,

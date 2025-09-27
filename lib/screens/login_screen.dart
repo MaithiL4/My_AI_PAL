@@ -86,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset('web/icons/Icon-192.png', width: 50, height: 50),
+                    Image.asset('web/icons/Gemini_Generated_Image_v2.0.png', width: 50, height: 50),
                     const SizedBox(height: 20),
                     const Text(
                       "Welcome back",

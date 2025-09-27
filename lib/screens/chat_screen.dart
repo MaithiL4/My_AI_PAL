@@ -1,3 +1,4 @@
+import 'package:my_ai_pal/screens/ai_profile_screen.dart';
 import 'package:glassmorphism/glassmorphism.dart';
 import 'dart:async';
 
@@ -164,7 +165,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return GradientScaffold(
       appBar: AppBar(
-        title: Text('${user.aiPalName} 💬', style: const TextStyle(color: Colors.white)),
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AIProfileScreen(user: user)),
+            );
+          },
+          child: Text('${user.aiPalName} 💬', style: const TextStyle(color: Colors.white)),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [

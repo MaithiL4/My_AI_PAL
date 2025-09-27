@@ -34,6 +34,7 @@ class AuthService {
         email: email,
         aiPalName: aiPalName,
         hasSeenWelcome: false,
+        personalityTraits: const ['Friendly', 'Supportive'],
       );
 
       await _firestore

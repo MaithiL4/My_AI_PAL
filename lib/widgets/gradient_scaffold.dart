@@ -10,10 +10,9 @@ class GradientScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0f2027), Color(0xFF203a43), Color(0xFF2c5364)],
+        image: DecorationImage(
+          image: AssetImage("web/icons/pexels-cmonphotography-1809644.jpg"),
+          fit: BoxFit.cover,
         ),
       ),
       child: Scaffold(

@@ -193,7 +193,7 @@ void main() {
       });
     });
 
-    group('summarizeAndStoreMemory', () {
+    group('extractAndStoreMemories', () {
       test('should not throw when successful', () async {
         // Arrange
         final user = app_user.User(
@@ -230,9 +230,9 @@ void main() {
 
         // Act & Assert
         expect(
-          () => aiService.summarizeAndStoreMemory(
+          () => aiService.extractAndStoreMemories(
             user: user,
-            history: history,
+            conversation: history,
           ),
           returnsNormally,
         );
@@ -254,9 +254,9 @@ void main() {
 
         // Act & Assert
         expect(
-          () => aiService.summarizeAndStoreMemory(
+          () => aiService.extractAndStoreMemories(
             user: user,
-            history: history,
+            conversation: history,
           ),
           returnsNormally,
         );
@@ -285,9 +285,9 @@ void main() {
 
         // Act & Assert
         expect(
-          () => aiService.summarizeAndStoreMemory(
+          () => aiService.extractAndStoreMemories(
             user: user,
-            history: history,
+            conversation: history,
           ),
           returnsNormally,
         );

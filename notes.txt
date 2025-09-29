@@ -1,0 +1,50 @@
+# My AI Pal - Project Documentation
+
+## 1. Project Concept
+
+My AI Pal is a Flutter-based mobile application that provides users with a personal AI companion. The goal of the project is to create a friendly, supportive, and engaging AI friend that users can chat with, confide in, and build a relationship with over time.
+
+The core concept revolves around a conversational AI that has a customizable personality and a memory system that allows it to learn and remember things about the user, creating a more personal and meaningful connection.
+
+## 2. Key Features
+
+-   **Conversational AI:** The app's main feature is a chat interface where users can have open-ended conversations with their AI Pal.
+-   **Customizable AI Personality:** Users can shape their AI Pal's personality by selecting from a list of predefined traits or adding their own custom traits. The AI's responses and behavior are influenced by its personality.
+-   **AI Memory:** The AI has a memory system that allows it to learn and recall key facts about the user from previous conversations, leading to more context-aware and personal interactions.
+-   **User and AI Profiles:** The app includes profile screens for both the user and the AI, where they can customize their avatars and names.
+-   **Glassmorphism UI:** The user interface is designed with a modern "glassmorphism" aesthetic, featuring blurred, transparent elements that create a sense of depth and a visually appealing experience.
+-   **Cross-Platform:** Being a Flutter application, My AI Pal is designed to run on multiple platforms, including Android, iOS, and web.
+
+## 3. Technologies and Tools Used
+
+-   **Frontend:**
+    -   **Flutter:** The core framework for building the cross-platform application.
+    -   **Dart:** The programming language used for Flutter development.
+    -   **flutter_bloc:** For state management, providing a structured way to manage the app's state and business logic.
+    -   **glassmorphism:** A Flutter package used to create the glassmorphism UI effect.
+    -   **http:** For making HTTP requests to the AI API.
+    -   **provider:** For dependency injection.
+
+-   **Backend & AI:**
+    -   **Firebase:** Used as the backend for the application.
+        -   **Firestore:** A NoSQL database used to store user data, chat history, AI memories, and personality traits.
+        -   **Firebase Authentication:** For user authentication (email/password).
+    -   **Mistral AI API:** The AI service used to power the conversational capabilities of the AI Pal. The `mistral-tiny` model is used for generating responses.
+
+-   **Version Control:**
+    -   **Git:** For version control and managing the project's history.
+    -   **GitHub:** For hosting the remote repository and collaborating on the project.
+
+## 4. Project Structure
+
+The project follows a standard Flutter project structure, with the main components organized as follows:
+
+-   `lib/`: The main directory containing the Dart source code.
+    -   `blocs/`: Contains the BLoC (Business Logic Component) classes for state management.
+    -   `models/`: Defines the data models for the application (e.g., `User`).
+    -   `screens/`: Contains the UI for the different screens of the app (e.g., `ChatScreen`, `LoginScreen`).
+    -   `services/`: Includes services that handle business logic and communication with external APIs (e.g., `AuthService`, `AIService`).
+    -   `widgets/`: Contains reusable UI widgets (e.g., `ChatBubble`, `GradientScaffold`).
+-   `firebase/`: Contains the Firebase configuration files.
+-   `web/`: Contains the web-specific files, including `index.html` and `manifest.json`.
+-   `pubspec.yaml`: The project's configuration file, which defines dependencies and other settings.

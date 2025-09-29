@@ -1,16 +1,19 @@
+import 'package:my_ai_pal/screens/mood_dashboard_screen.dart';
+import 'package:my_ai_pal/widgets/settings/ai_personality_card.dart';
+import 'package:my_ai_pal/widgets/settings/avatar_selection.dart';
+import 'package:my_ai_pal/widgets/settings/data_management_card.dart';
+import 'package:my_ai_pal/widgets/settings/personalize_card.dart';
+import 'package:my_ai_pal/widgets/settings/theme_card.dart';
+import 'package:my_ai_pal/screens/memory_lane_screen.dart';
+import 'package:my_ai_pal/screens/my_profile_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:glassmorphism/glassmorphism.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
-import 'package:my_ai_pal/models/user.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:my_ai_pal/screens/avatar_selection_screen.dart';
 import 'package:my_ai_pal/screens/login_screen.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
-import 'package:my_ai_pal/services/theme_service.dart';
 import 'package:my_ai_pal/widgets/gradient_scaffold.dart';
-import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -26,15 +29,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _userNameController = TextEditingController();
-    _aiPalNameController = TextEditingController();
-    _loadCurrentUser();
-  }
-
-  void _loadCurrentUser() {
     final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
-    _userNameController.text = user.userName;
-    _aiPalNameController.text = user.aiPalName;
+    _userNameController = TextEditingController(text: user.userName);
+    _aiPalNameController = TextEditingController(text: user.aiPalName);
   }
 
   @override
@@ -140,8 +137,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeService = Provider.of<ThemeService>(context);
-
     return GradientScaffold(
       appBar: AppBar(
         title: const Text('Settings', style: TextStyle(color: Colors.white)),
@@ -175,201 +170,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    final selectedAvatar = await Navigator.push<String>(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AvatarSelectionScreen()),
-                    );
-
-                    if (selectedAvatar != null) {
-                      final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
-                      final updatedUser = user.copyWith(avatarUrl: selectedAvatar);
-                      context.read<AuthBloc>().add(UserUpdated(updatedUser));
-                      FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(user.id)
-                          .update({'avatarUrl': selectedAvatar});
-                    }
-                  },
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        child: ClipOval(
-                          child: SvgPicture.network(
-                            (context.watch<AuthBloc>().state as AuthAuthenticated).user.avatarUrl ??
-                                'https://api.dicebear.com/7.x/adventurer/svg?seed=0',
-                            placeholderBuilder: (context) => const CircularProgressIndicator(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text('Your Avatar', style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    final selectedAvatar = await Navigator.push<String>(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AvatarSelectionScreen()),
-                    );
-
-                    if (selectedAvatar != null) {
-                      final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
-                      final updatedUser = user.copyWith(aiAvatarUrl: selectedAvatar);
-                      context.read<AuthBloc>().add(UserUpdated(updatedUser));
-                      FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(user.id)
-                          .update({'aiAvatarUrl': selectedAvatar});
-                    }
-                  },
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        child: ClipOval(
-                          child: SvgPicture.network(
-                            (context.watch<AuthBloc>().state as AuthAuthenticated).user.aiAvatarUrl ??
-                                'https://api.dicebear.com/7.x/adventurer/svg?seed=13',
-                            placeholderBuilder: (context) => const CircularProgressIndicator(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text('AI Pal\'s Avatar', style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                ),
-              ],
+            Card(
+              elevation: 2,
+              color: Colors.white.withOpacity(0.1),
+              child: ListTile(
+                leading: const Icon(Icons.person, color: Colors.white),
+                title: const Text('My Profile', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MyProfileScreen()),
+                  );
+                },
+              ),
             ),
+            const SizedBox(height: 20),
+            const AvatarSelection(),
+            const SizedBox(height: 20),
+            PersonalizeCard(
+              userNameController: _userNameController,
+              aiPalNameController: _aiPalNameController,
+              onSave: _saveSettings,
+            ),
+            const SizedBox(height: 20),
+            const ThemeCard(),
+            const SizedBox(height: 20),
+            const AIPersonalityCard(),
             const SizedBox(height: 20),
             Card(
               elevation: 2,
               color: Colors.white.withOpacity(0.1),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Personalize", style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: _userNameController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: "Your Name",
-                        labelStyle: TextStyle(color: Colors.white70),
-                        prefixIcon: Icon(Icons.person, color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _aiPalNameController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: "AI Pal's Name",
-                        labelStyle: TextStyle(color: Colors.white70),
-                        prefixIcon: Icon(Icons.psychology, color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _saveSettings,
-                        child: const Text("Save Names"),
-                      ),
-                    ),
-                  ],
-                ),
+              child: ListTile(
+                leading: const Icon(Icons.sentiment_satisfied, color: Colors.white),
+                title: const Text('Mood Dashboard', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MoodDashboardScreen()),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 20),
             Card(
               elevation: 2,
               color: Colors.white.withOpacity(0.1),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Theme", style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-                    const SizedBox(height: 10),
-                    SwitchListTile(
-                      title: const Text('Dark Mode', style: TextStyle(color: Colors.white)),
-                      value: themeService.themeMode == ThemeMode.dark,
-                      onChanged: (value) {
-                        themeService.setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
-                      },
-                    ),
-                    SwitchListTile(
-                      title: const Text('Follow System Theme', style: TextStyle(color: Colors.white)),
-                      value: themeService.themeMode == ThemeMode.system,
-                      onChanged: (value) {
-                        if (value) {
-                          themeService.setThemeMode(ThemeMode.system);
-                        }
-                      },
-                    ),
-                  ],
-                ),
+              child: ListTile(
+                leading: const Icon(Icons.history, color: Colors.white),
+                title: const Text('Memory Lane', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MemoryLaneScreen()),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 20),
-            Card(
-              elevation: 2,
-              color: Colors.white.withOpacity(0.1),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("AI Personality", style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/personality');
-                        },
-                        icon: const Icon(Icons.psychology_alt),
-                        label: const Text("Customize AI Personality"),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Card(
-              elevation: 2,
-              color: Colors.white.withOpacity(0.1),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Data Management", style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _clearHistory,
-                        icon: const Icon(Icons.delete_forever),
-                        label: const Text("Clear Chat History"),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            DataManagementCard(onClearHistory: _clearHistory),
             const SizedBox(height: 40),
             Center(
               child: ElevatedButton.icon(

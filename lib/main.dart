@@ -17,12 +17,19 @@ import 'package:my_ai_pal/theme/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
+import 'package:my_ai_pal/services/notification_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  final notificationService = NotificationService();
+  await notificationService.init();
+  await notificationService.scheduleDailyNotification();
+
   final authService = AuthService();
   final aiService = AIService(apiKey: dotenv.env['MISTRAL_API_KEY']);
   runApp(

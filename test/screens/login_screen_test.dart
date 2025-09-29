@@ -52,7 +52,7 @@ void main() {
     await tester.pump();
 
     expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.text('Please fill in both fields.'), findsOneWidget);
+    expect(find.text('Please fill in all fields.'), findsOneWidget);
   });
 
   testWidgets('shows a loading indicator when loading', (WidgetTester tester) async {

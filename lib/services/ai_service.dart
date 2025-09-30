@@ -12,13 +12,18 @@ class AIService {
   final Connectivity _connectivity;
   late GenerativeModel _model;
 
-  AIService({FirebaseFirestore? firestore, Connectivity? connectivity}) 
-      : _firestore = firestore ?? FirebaseFirestore.instance,
+  AIService({
+    FirebaseFirestore? firestore,
+    Connectivity? connectivity,
+    String? apiKey,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _connectivity = connectivity ?? Connectivity() {
-    print('Gemini API Key: ${dotenv.env['GEMINI_API_KEY']}');
+    if (apiKey == null) {
+      throw AIServiceException('Gemini API key is required.');
+    }
     _model = GenerativeModel(
-      model: 'gemini-2.5-flash',
-      apiKey: dotenv.env['GEMINI_API_KEY']!,
+      model: 'gemini-1.5-flash',
+      apiKey: apiKey,
     );
   }
 

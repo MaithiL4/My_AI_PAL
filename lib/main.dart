@@ -32,7 +32,7 @@ void main() async {
   await notificationService.scheduleDailyNotification();
 
   final authService = AuthService();
-  final aiService = AIService();
+  final aiService = AIService(apiKey: dotenv.env['GEMINI_API_KEY']);
   final imageUploadService = ImageUploadService();
   runApp(
     MultiProvider(

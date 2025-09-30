@@ -1,9 +1,12 @@
-import 'package:glassmorphism/glassmorphism.dart';
+import 'dart:io';
+import 'package:flutter_glass_morphism/flutter_glass_morphism.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
+import 'package:image_picker/image_picker.dart';
+import 'package:my_ai_pal/services/image_upload_service.dart';
 
 import 'package:my_ai_pal/widgets/gradient_scaffold.dart';
 import 'package:my_ai_pal/widgets/chat_bubble.dart';
@@ -39,6 +42,7 @@ class ChatView extends StatefulWidget {
 class _ChatViewState extends State<ChatView> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -67,6 +71,62 @@ class _ChatViewState extends State<ChatView> {
     _controller.clear();
   }
 
+  void _sendImage(ImageSource source) async {
+    try {
+      final pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile == null) return;
+
+      // First, get the bytes for the AI
+      final imageBytes = await pickedFile.readAsBytes();
+
+      // Then, upload the image to get a URL for display
+      final imageUploadService = context.read<ImageUploadService>();
+      final imageUrl = await imageUploadService.uploadImage(imageBytes, pickedFile.name);
+
+      if (imageUrl != null) {
+        // Send everything to the BLoC
+        context.read<ChatBloc>().add(SendMessage(imageUrl: imageUrl, imageBytes: imageBytes));
+      } else {
+        throw Exception('Failed to get image URL after upload.');
+      }
+
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Image Upload Failed: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  void _showImageSourceDialog() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () {
+                _sendImage(ImageSource.gallery);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Camera'),
+              onTap: () {
+                _sendImage(ImageSource.camera);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = (context.watch<AuthBloc>().state as AuthAuthenticated).user;
@@ -93,26 +153,12 @@ class _ChatViewState extends State<ChatView> {
           ),
         ],
       ),
-      body: GlassmorphicContainer(
+      body: GlassMorphismContainer(
         width: double.infinity,
         height: double.infinity,
-        borderRadius: 0,
-        blur: 20,
+        borderRadius: BorderRadius.circular(0),
         alignment: Alignment.center,
-        border: 2,
-        linearGradient: LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.2),
-            Colors.white.withOpacity(0.05),
-          ],
-          stops: const [0.1, 1],
-        ),
-        borderGradient: LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.5),
-            Colors.white.withOpacity(0.5),
-          ],
-        ),
+
         child: Column(
           children: [
             Expanded(
@@ -152,6 +198,7 @@ class _ChatViewState extends State<ChatView> {
                         final isUser = msg['sender'] == user.userName;
                         return ChatBubble(
                           message: msg['text'] ?? '',
+                          imageUrl: msg['imageUrl'],
                           isUser: isUser,
                           userName: user.userName,
                           aiPalName: user.aiPalName,
@@ -190,6 +237,10 @@ class _ChatViewState extends State<ChatView> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
+          IconButton(
+            icon: const Icon(Icons.attach_file, color: Colors.white),
+            onPressed: _showImageSourceDialog,
+          ),
           Expanded(
             child: RawKeyboardListener(
               focusNode: FocusNode(),

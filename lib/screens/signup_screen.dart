@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:glassmorphism/glassmorphism.dart';
+import 'package:flutter_glass_morphism/flutter_glass_morphism.dart';
 import 'package:my_ai_pal/screens/chat_screen.dart';
 import 'package:my_ai_pal/screens/welcome_screen.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
@@ -80,30 +80,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
             return Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
-                child: GlassmorphicContainer(
+                child: GlassMorphismContainer(
                   width: 350,
                   height: 600,
-                  borderRadius: 20,
-                  blur: 20,
+                  borderRadius: BorderRadius.circular(20),
                   alignment: Alignment.center,
-                  border: 2,
-                  linearGradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withOpacity(0.2),
-                      Colors.white.withOpacity(0.05),
-                    ],
-                    stops: const [0.1, 1],
-                  ),
-                  borderGradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withOpacity(0.5),
-                      Colors.white.withOpacity(0.5),
-                    ],
-                  ),
+
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(

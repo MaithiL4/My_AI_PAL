@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 class ChatBubble extends StatelessWidget {
   final String message;
+  final String? imageUrl;
   final bool isUser;
   final String userName;
   final String aiPalName;
@@ -16,6 +17,7 @@ class ChatBubble extends StatelessWidget {
   const ChatBubble({
     super.key,
     required this.message,
+    this.imageUrl,
     required this.isUser,
     required this.userName,
     required this.aiPalName,
@@ -65,13 +67,28 @@ class ChatBubble extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      message,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
+                    if (imageUrl != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10.0),
+                        child: Image.network(
+                          imageUrl!,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(child: CircularProgressIndicator());
+                          },
+                        ),
                       ),
-                    ),
+                    if (message.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(top: imageUrl != null ? 8.0 : 0.0),
+                        child: Text(
+                          message,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 5),
                     Text(
                       DateFormat('hh:mm a').format(timestamp),

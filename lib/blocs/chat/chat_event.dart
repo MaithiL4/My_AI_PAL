@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 part of 'chat_bloc.dart';
 
 @immutable
@@ -8,9 +10,11 @@ class FetchMessages extends ChatEvent {}
 class LoadMoreMessages extends ChatEvent {}
 
 class SendMessage extends ChatEvent {
-  final String message;
+  final String? message;
+  final String? imageUrl;
+  final Uint8List? imageBytes;
 
-  SendMessage({required this.message});
+  SendMessage({this.message, this.imageUrl, this.imageBytes});
 }
 
 class _MessagesUpdated extends ChatEvent {

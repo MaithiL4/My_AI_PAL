@@ -6,12 +6,9 @@
 import 'dart:async' as _i3;
 
 import 'package:bloc/bloc.dart' as _i4;
-import 'package:flutter/src/widgets/navigator.dart' as _i8;
+import 'package:flutter/src/widgets/navigator.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i7;
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart' as _i2;
-import 'package:my_ai_pal/models/user.dart' as _i6;
-import 'package:my_ai_pal/services/ai_service.dart' as _i5;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -170,75 +167,18 @@ class MockAuthBloc extends _i1.Mock implements _i2.AuthBloc {
       );
 }
 
-/// A class which mocks [AIService].
-///
-/// See the documentation for Mockito's code generation for more information.
-class MockAIService extends _i1.Mock implements _i5.AIService {
-  MockAIService() {
-    _i1.throwOnMissingStub(this);
-  }
-
-  @override
-  _i3.Future<String> getAIReply({
-    required String? userMessage,
-    required _i6.User? user,
-    required List<Map<String, String>>? history,
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getAIReply,
-          [],
-          {
-            #userMessage: userMessage,
-            #user: user,
-            #history: history,
-          },
-        ),
-        returnValue: _i3.Future<String>.value(_i7.dummyValue<String>(
-          this,
-          Invocation.method(
-            #getAIReply,
-            [],
-            {
-              #userMessage: userMessage,
-              #user: user,
-              #history: history,
-            },
-          ),
-        )),
-      ) as _i3.Future<String>);
-
-  @override
-  _i3.Future<void> summarizeAndStoreMemory({
-    required _i6.User? user,
-    required List<Map<String, String>>? history,
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #summarizeAndStoreMemory,
-          [],
-          {
-            #user: user,
-            #history: history,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
-}
-
 /// A class which mocks [NavigatorObserver].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockNavigatorObserver extends _i1.Mock implements _i8.NavigatorObserver {
+class MockNavigatorObserver extends _i1.Mock implements _i5.NavigatorObserver {
   MockNavigatorObserver() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
   void didPush(
-    _i8.Route<dynamic>? route,
-    _i8.Route<dynamic>? previousRoute,
+    _i5.Route<dynamic>? route,
+    _i5.Route<dynamic>? previousRoute,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -253,8 +193,8 @@ class MockNavigatorObserver extends _i1.Mock implements _i8.NavigatorObserver {
 
   @override
   void didPop(
-    _i8.Route<dynamic>? route,
-    _i8.Route<dynamic>? previousRoute,
+    _i5.Route<dynamic>? route,
+    _i5.Route<dynamic>? previousRoute,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -269,8 +209,8 @@ class MockNavigatorObserver extends _i1.Mock implements _i8.NavigatorObserver {
 
   @override
   void didRemove(
-    _i8.Route<dynamic>? route,
-    _i8.Route<dynamic>? previousRoute,
+    _i5.Route<dynamic>? route,
+    _i5.Route<dynamic>? previousRoute,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -285,8 +225,8 @@ class MockNavigatorObserver extends _i1.Mock implements _i8.NavigatorObserver {
 
   @override
   void didReplace({
-    _i8.Route<dynamic>? newRoute,
-    _i8.Route<dynamic>? oldRoute,
+    _i5.Route<dynamic>? newRoute,
+    _i5.Route<dynamic>? oldRoute,
   }) =>
       super.noSuchMethod(
         Invocation.method(
@@ -302,8 +242,8 @@ class MockNavigatorObserver extends _i1.Mock implements _i8.NavigatorObserver {
 
   @override
   void didChangeTop(
-    _i8.Route<dynamic>? topRoute,
-    _i8.Route<dynamic>? previousTopRoute,
+    _i5.Route<dynamic>? topRoute,
+    _i5.Route<dynamic>? previousTopRoute,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -318,8 +258,8 @@ class MockNavigatorObserver extends _i1.Mock implements _i8.NavigatorObserver {
 
   @override
   void didStartUserGesture(
-    _i8.Route<dynamic>? route,
-    _i8.Route<dynamic>? previousRoute,
+    _i5.Route<dynamic>? route,
+    _i5.Route<dynamic>? previousRoute,
   ) =>
       super.noSuchMethod(
         Invocation.method(

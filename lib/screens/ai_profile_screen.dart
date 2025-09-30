@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
 import 'package:my_ai_pal/models/user.dart';
 import 'package:my_ai_pal/widgets/gradient_scaffold.dart';
-import 'package:glassmorphism/glassmorphism.dart';
+import 'package:flutter_glass_morphism/flutter_glass_morphism.dart';
 
 class AIProfileScreen extends StatefulWidget {
   final User user;
@@ -69,30 +69,12 @@ class _AIProfileScreenState extends State<AIProfileScreen> {
         ],
       ),
       body: Center(
-        child: GlassmorphicContainer(
+        child: GlassMorphismContainer(
           width: 350,
           height: 600,
-          borderRadius: 20,
-          blur: 20,
+          borderRadius: BorderRadius.circular(20),
           alignment: Alignment.center,
-          border: 2,
-          linearGradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withOpacity(0.2),
-              Colors.white.withOpacity(0.05),
-            ],
-            stops: const [0.1, 1],
-          ),
-          borderGradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withOpacity(0.5),
-              Colors.white.withOpacity(0.5),
-            ],
-          ),
+
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(

@@ -58,26 +58,59 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
-    if (_currentUser != null) {
-      if (state is ChatLoaded) {
-        final currentState = state as ChatLoaded;
-        emit(AITyping(messages: currentState.messages));
+    if (_currentUser == null) return;
 
-        try {
-          await _aiService.getAIReply(
-            userMessage: event.message,
-            user: _currentUser!,
-            history: currentState.messages.map((doc) {
-              final data = doc.data() as Map<String, dynamic>;
-              return {
-                'sender': data['sender']?.toString() ?? '',
-                'text': data['text']?.toString() ?? '',
-              };
-            }).toList().cast<Map<String, String>>().reversed.toList(),
-          );
-        } catch (e) {
-          emit(ChatError(message: e.toString()));
-        }
+    // Save the user's message to Firestore first, so it appears instantly.
+    final messageData = {
+      'sender': _currentUser!.userName,
+      'timestamp': FieldValue.serverTimestamp(),
+      'text': event.message ?? '',
+      'imageUrl': event.imageUrl,
+    };
+    await _firestore
+        .collection('users')
+        .doc(_currentUser!.id)
+        .collection('chats')
+        .add(messageData);
+
+    // Now, get the AI's reply.
+    if (state is ChatLoaded || state is AITyping) {
+      final currentMessages = (state is ChatLoaded)
+          ? (state as ChatLoaded).messages
+          : (state as AITyping).messages;
+
+      emit(AITyping(messages: currentMessages));
+
+      try {
+        final aiReply = await _aiService.getAIReply(
+          userMessage: event.message,
+          imageBytes: event.imageBytes,
+          user: _currentUser!,
+          history: currentMessages.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return {
+              'sender': data['sender']?.toString() ?? '',
+              'text': data['text']?.toString() ?? '',
+            };
+          }).toList().cast<Map<String, String>>().reversed.toList(),
+        );
+
+        // Save the AI's reply to Firestore.
+        await _firestore
+            .collection('users')
+            .doc(_currentUser!.id)
+            .collection('chats')
+            .add({
+          'sender': _currentUser!.aiPalName,
+          'text': aiReply,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        // Emit ChatLoaded to clear the AITyping state
+        emit(ChatLoaded(messages: currentMessages));
+
+      } catch (e) {
+        emit(ChatError(message: e.toString()));
       }
     }
   }

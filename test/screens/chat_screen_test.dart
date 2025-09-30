@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -14,57 +13,39 @@ import 'package:my_ai_pal/screens/chat_screen.dart';
 import 'package:my_ai_pal/widgets/chat_bubble.dart';
 import 'package:provider/provider.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:http/testing.dart';
-import 'package:http/http.dart' as http;
 
+import '../services/ai_service_fake.dart';
 import 'chat_screen_test.mocks.dart';
 
-@GenerateMocks([AuthBloc, AIService, NavigatorObserver])
+@GenerateMocks([AuthBloc, NavigatorObserver])
 void main() {
   late MockAuthBloc mockAuthBloc;
-  late MockAIService mockAIService;
+  late FakeAIService fakeAIService;
   late MockNavigatorObserver mockNavigatorObserver;
   late User user;
   late FakeFirebaseFirestore fakeFirestore;
-  late MockClient mockHttpClient;
 
   setUp(() {
     mockAuthBloc = MockAuthBloc();
-    mockAIService = MockAIService();
+    fakeAIService = FakeAIService();
     mockNavigatorObserver = MockNavigatorObserver();
     user = User(id: '123', userName: 'Test', email: 'test@test.com', aiPalName: 'TestPal');
     fakeFirestore = FakeFirebaseFirestore();
 
-    mockHttpClient = MockClient((request) async {
-      if (request.url.toString().contains('api.dicebear.com')) {
-        return http.Response(
-          '''<svg viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg"></svg>''',
-          200,
-          headers: {'content-type': 'image/svg+xml'},
-        );
-      }
-      return http.Response('Not Found', 404);
-    });
-
     when(mockAuthBloc.state).thenReturn(AuthAuthenticated(user: user));
     when(mockAuthBloc.stream).thenAnswer((_) => Stream.empty());
     when(mockNavigatorObserver.navigator).thenReturn(null);
-    when(mockAIService.getAIReply(
-      userMessage: anyNamed('userMessage'),
-      user: anyNamed('user'),
-      history: anyNamed('history'),
-    )).thenAnswer((_) async => 'AI reply');
   });
 
-  Future<void> pumpChatScreen(WidgetTester tester, {bool disableInitialGreeting = true}) async {
+  Future<void> pumpChatScreen(WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: MultiProvider(
           providers: [
             BlocProvider<AuthBloc>.value(value: mockAuthBloc),
-            Provider<AIService>.value(value: mockAIService),
+            Provider<AIService>.value(value: fakeAIService),
           ],
-          child: ChatScreen(firestore: fakeFirestore, disableInitialGreeting: disableInitialGreeting),
+          child: const ChatScreen(),
         ),
         navigatorObservers: [mockNavigatorObserver],
       ),
@@ -103,15 +84,16 @@ void main() {
     await pumpChatScreen(tester);
     await tester.pumpAndSettle();
 
+    fakeAIService.mockReply = 'AI reply';
+
     await tester.enterText(find.byType(TextField), 'Hello');
     await tester.tap(find.byType(ElevatedButton));
     await tester.pump();
 
-    verify(mockAIService.getAIReply(
-      userMessage: 'Hello',
-      user: user,
-      history: anyNamed('history'),
-    )).called(1);
+    final messages = await fakeFirestore.collection('users').doc(user.id).collection('chats').get();
+    expect(messages.docs.length, 2);
+    expect(messages.docs.any((doc) => doc.data()['text'] == 'Hello'), isTrue);
+    expect(messages.docs.any((doc) => doc.data()['text'] == 'AI reply'), isTrue);
   });
 
   testWidgets('loads more messages when scrolling to the top', (WidgetTester tester) async {
@@ -132,16 +114,5 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ChatBubble), findsNWidgets(25));
-  });
-
-  testWidgets('shows initial greeting when there are no messages', (WidgetTester tester) async {
-    await pumpChatScreen(tester, disableInitialGreeting: false);
-    await tester.pumpAndSettle();
-
-    verify(mockAIService.getAIReply(
-      userMessage: 'Introduce yourself to your new friend, Test. Be warm and ask a question to start the conversation.',
-      user: user,
-      history: [],
-    )).called(1);
   });
 }

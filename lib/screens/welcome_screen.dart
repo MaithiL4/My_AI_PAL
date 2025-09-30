@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:glassmorphism/glassmorphism.dart';
+import 'package:flutter_glass_morphism/flutter_glass_morphism.dart';
 import 'package:provider/provider.dart';
 import 'package:my_ai_pal/models/user.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
@@ -60,30 +60,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: GlassmorphicContainer(
+          child: GlassMorphismContainer(
             width: 350,
             height: 500,
-            borderRadius: 20,
-            blur: 20,
+            borderRadius: BorderRadius.circular(20),
             alignment: Alignment.center,
-            border: 2,
-            linearGradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.2),
-                Colors.white.withOpacity(0.05),
-              ],
-              stops: const [0.1, 1],
-            ),
-            borderGradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.5),
-                Colors.white.withOpacity(0.5),
-              ],
-            ),
+
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

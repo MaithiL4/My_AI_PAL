@@ -1,3 +1,4 @@
+import 'package:my_ai_pal/services/image_upload_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -31,12 +32,14 @@ void main() async {
   await notificationService.scheduleDailyNotification();
 
   final authService = AuthService();
-  final aiService = AIService(apiKey: dotenv.env['MISTRAL_API_KEY']);
+  final aiService = AIService();
+  final imageUploadService = ImageUploadService();
   runApp(
     MultiProvider(
       providers: [
         Provider<AuthService>.value(value: authService),
         Provider<AIService>.value(value: aiService),
+        Provider<ImageUploadService>.value(value: imageUploadService),
         ChangeNotifierProvider(create: (_) => ThemeService()),
         BlocProvider(create: (_) => AuthBloc(authService)..add(AuthCheckRequested())),
       ],

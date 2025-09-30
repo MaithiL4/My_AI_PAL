@@ -9,7 +9,7 @@ import 'package:my_ai_pal/screens/my_profile_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:glassmorphism/glassmorphism.dart';
+import 'package:flutter_glass_morphism/flutter_glass_morphism.dart';
 import 'package:my_ai_pal/blocs/auth/auth_bloc.dart';
 import 'package:my_ai_pal/screens/login_screen.dart';
 import 'package:my_ai_pal/services/auth_service.dart';
@@ -143,30 +143,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: GlassmorphicContainer(
+      body: GlassMorphismContainer(
         width: double.infinity,
         height: double.infinity,
-        borderRadius: 0,
-        blur: 20,
+        borderRadius: BorderRadius.circular(0),
         alignment: Alignment.center,
-        border: 2,
-        linearGradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withOpacity(0.2),
-            Colors.white.withOpacity(0.05),
-          ],
-          stops: const [0.1, 1],
-        ),
-        borderGradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withOpacity(0.5),
-            Colors.white.withOpacity(0.5),
-          ],
-        ),
+
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [

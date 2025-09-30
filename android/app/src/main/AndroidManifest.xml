@@ -3,6 +3,7 @@
     <application
         android:label="my_ai_pal"
         android:name="${applicationName}"
+        android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

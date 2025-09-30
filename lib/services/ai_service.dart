@@ -15,7 +15,7 @@ class AIService {
   AIService({FirebaseFirestore? firestore, Connectivity? connectivity}) 
       : _firestore = firestore ?? FirebaseFirestore.instance,
         _connectivity = connectivity ?? Connectivity() {
-    print('Gemini API Key: ${dotenv.env['GEMINI_API_KEY']}');
+  }
     _model = GenerativeModel(
                 model: 'gemini-2.5-flash',      apiKey: dotenv.env['GEMINI_API_KEY']!,
     );

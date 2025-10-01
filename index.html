@@ -33,6 +33,22 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+      apiKey: "AIzaSyAVbJhOOjCQIqArj0i8c5_iblElvjp0T-Y",
+      authDomain: "my-ai-pal-6e97a.firebaseapp.com",
+      projectId: "my-ai-pal-6e97a",
+      storageBucket: "my-ai-pal-6e97a.firebasestorage.app",
+      messagingSenderId: "344745789185",
+      appId: "1:344745789185:web:cb6bb5590e7d9b5e797d00"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

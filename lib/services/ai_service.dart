@@ -22,7 +22,7 @@ class AIService {
       throw AIServiceException('Gemini API key is required.');
     }
     _model = GenerativeModel(
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash-latest',
       apiKey: apiKey,
     );
   }

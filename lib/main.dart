@@ -23,6 +23,7 @@ import 'package:my_ai_pal/services/notification_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  print('GEMINI_API_KEY from .env: ${dotenv.env['GEMINI_API_KEY']}');
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
